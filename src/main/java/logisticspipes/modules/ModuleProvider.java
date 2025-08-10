@@ -208,6 +208,11 @@ public class ModuleProvider extends LogisticsSneakyDirectionModule implements IL
                 firstOrder = order;
             }
             order = _service.getItemOrderManager().peekAtTopRequest(ResourceType.PROVIDER);
+            order.tryPopulateRouter();
+            if (order.getRouter() == null && order.timeWithoutRouter < 60) {
+                ++order.timeWithoutRouter;
+                break;
+            }
             int sent = sendStack(
                     order.getResource().stack,
                     itemsleft,

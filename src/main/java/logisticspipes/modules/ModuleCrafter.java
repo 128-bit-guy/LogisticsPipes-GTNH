@@ -1328,6 +1328,12 @@ public class ModuleCrafter extends LogisticsGuiModule implements ICraftItems, IH
                 && (_service.getItemOrderManager().hasOrders(ResourceType.CRAFTING, ResourceType.EXTRA))) {
             LogisticsItemOrder nextOrder = _service.getItemOrderManager()
                     .peekAtTopRequest(ResourceType.CRAFTING, ResourceType.EXTRA); // fetch but not remove.
+                                                                                  // nextOrder.tryPopulateRouter();
+            nextOrder.tryPopulateRouter();
+            if (nextOrder.getRouter() == null && nextOrder.timeWithoutRouter < 60) {
+                ++nextOrder.timeWithoutRouter;
+                break;
+            }
             int maxtosend = Math.min(itemsleft, nextOrder.getResource().stack.getStackSize());
             maxtosend = Math.min(nextOrder.getResource().getItem().getMaxStackSize(), maxtosend);
             // retrieve the new crafted items
@@ -1380,9 +1386,9 @@ public class ModuleCrafter extends LogisticsGuiModule implements ICraftItems, IH
                 stacksleft -= 1;
                 itemsleft -= numtosend;
                 ItemStack stackToSend = extracted.splitStack(numtosend);
-                if (nextOrder.getDestination() != null) {
+                if (nextOrder.getRouter() != null) {
                     SinkReply reply = LogisticsManager.canSink(
-                            nextOrder.getDestination().getRouter(),
+                            nextOrder.getRouter(),
                             null,
                             true,
                             ItemIdentifier.get(stackToSend),
@@ -1392,7 +1398,7 @@ public class ModuleCrafter extends LogisticsGuiModule implements ICraftItems, IH
                     boolean defersend = reply == null || reply.bufferMode != BufferMode.NONE
                             || reply.maxNumberOfItems < 1;
                     IRoutedItem item = SimpleServiceLocator.routedItemHelper.createNewTravelItem(stackToSend);
-                    item.setDestination(nextOrder.getDestination().getRouter().getSimpleID());
+                    item.setDestination(nextOrder.getRouter().getSimpleID());
                     item.setTransportMode(TransportMode.Active);
                     item.setAdditionalTargetInformation(nextOrder.getInformation());
                     _service.queueRoutedItem(item, tile.orientation);

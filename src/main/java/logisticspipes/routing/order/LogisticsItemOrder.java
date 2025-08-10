@@ -2,6 +2,7 @@ package logisticspipes.routing.order;
 
 import logisticspipes.interfaces.routing.IAdditionalTargetInformation;
 import logisticspipes.interfaces.routing.IRequestItems;
+import logisticspipes.proxy.SimpleServiceLocator;
 import logisticspipes.request.resources.DictResource;
 import logisticspipes.routing.IRouter;
 import logisticspipes.utils.item.ItemIdentifierStack;
@@ -13,6 +14,7 @@ public class LogisticsItemOrder extends LogisticsOrder {
             IAdditionalTargetInformation info) {
         this(item, destination == null ? -1 : destination.getRouter().getSimpleID(), type, info);
         this.destination = destination;
+        this.router = destination.getRouter();
     }
 
     public LogisticsItemOrder(DictResource item, int destination, ResourceType type,
@@ -31,15 +33,21 @@ public class LogisticsItemOrder extends LogisticsOrder {
     @Getter
     private IRequestItems destination;
 
+    private IRouter router;
+
     @Getter
     private final int destinationId;
 
+    public int timeWithoutRouter = 0;
+
     @Override
     public IRouter getRouter() {
-        if (destination == null) {
-            return null;
-        }
-        return destination.getRouter();
+        return router;
+    }
+
+    public void tryPopulateRouter() {
+        if (router != null) return;
+        router = SimpleServiceLocator.routerManager.getRouterUnsafe(destinationId, false);
     }
 
     @Override
