@@ -279,10 +279,15 @@ public class PipeItemsProviderLogistics extends CoreRoutedPipe implements IProvi
                 firstOrder = order;
             }
             order = _orderManager.peekAtTopRequest(ResourceType.PROVIDER);
+            order.tryPopulateRouter();
+            if (order.getRouter() == null && order.timeWithoutRouter < 60) {
+                ++order.timeWithoutRouter;
+                break;
+            }
             int sent = sendStack(
                     order.getResource().stack,
                     itemsleft,
-                    order.getRouter().getSimpleID(),
+                    order.getDestinationId(),
                     order.getInformation());
             if (sent < 0) {
                 break;
@@ -572,6 +577,7 @@ public class PipeItemsProviderLogistics extends CoreRoutedPipe implements IProvi
         providingInventory.readFromNBT(nbttagcompound, "");
         _filterIsExclude = nbttagcompound.getBoolean("filterisexclude");
         _extractionMode = ExtractionMode.getMode(nbttagcompound.getInteger("extractionMode"));
+        _orderManager.readFromNBT(nbttagcompound.getCompoundTag("providerOrderManager"));
     }
 
     @Override
@@ -580,6 +586,9 @@ public class PipeItemsProviderLogistics extends CoreRoutedPipe implements IProvi
         providingInventory.writeToNBT(nbttagcompound, "");
         nbttagcompound.setBoolean("filterisexclude", _filterIsExclude);
         nbttagcompound.setInteger("extractionMode", _extractionMode.ordinal());
+        NBTTagCompound orderManager = new NBTTagCompound();
+        _orderManager.writeToNBT(orderManager);
+        nbttagcompound.setTag("providerOrderManager", orderManager);
     }
 
     /**
