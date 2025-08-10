@@ -11,19 +11,28 @@ public class LogisticsItemOrder extends LogisticsOrder {
 
     public LogisticsItemOrder(DictResource item, IRequestItems destination, ResourceType type,
             IAdditionalTargetInformation info) {
+        this(item, destination == null ? -1 : destination.getRouter().getSimpleID(), type, info);
+        this.destination = destination;
+    }
+
+    public LogisticsItemOrder(DictResource item, int destination, ResourceType type,
+            IAdditionalTargetInformation info) {
         super(type, info);
         if (item == null) {
             throw new NullPointerException();
         }
         resource = item;
-        this.destination = destination;
+        this.destinationId = destination;
     }
 
     @Getter
     private final DictResource resource;
 
     @Getter
-    private final IRequestItems destination;
+    private IRequestItems destination;
+
+    @Getter
+    private final int destinationId;
 
     @Override
     public IRouter getRouter() {
@@ -31,6 +40,11 @@ public class LogisticsItemOrder extends LogisticsOrder {
             return null;
         }
         return destination.getRouter();
+    }
+
+    @Override
+    public int getRouterId() {
+        return destinationId;
     }
 
     @Override

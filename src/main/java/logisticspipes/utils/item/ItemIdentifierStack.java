@@ -7,8 +7,10 @@ package logisticspipes.utils.item;
 import java.util.LinkedList;
 
 import net.minecraft.entity.item.EntityItem;
+import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -31,6 +33,14 @@ public final class ItemIdentifierStack implements IStack, ILPCCTypeHolder {
 
     public static ItemIdentifierStack getFromStack(ItemStack stack) {
         return new ItemIdentifierStack(ItemIdentifier.get(stack), stack.stackSize);
+    }
+
+    public static ItemIdentifierStack getFromNbt(NBTTagCompound nbt) {
+        ItemStack stack = ItemStack.loadItemStackFromNBT(nbt.getCompoundTag("stack"));
+        if (stack == null) {
+            stack = new ItemStack(Blocks.air, 0);
+        }
+        return new ItemIdentifierStack(ItemIdentifier.get(stack), nbt.getInteger("stackSize"));
     }
 
     public ItemIdentifierStack(ItemIdentifier item, int stackSize) {
@@ -145,5 +155,11 @@ public final class ItemIdentifierStack implements IStack, ILPCCTypeHolder {
     @Override
     public Object getCCType() {
         return ccType;
+    }
+
+    public void writeToNBT(NBTTagCompound nbt) {
+        ItemStack stack = getItemIdentifier().makeNormalStack(1);
+        nbt.setTag("stack", stack.writeToNBT(new NBTTagCompound()));
+        nbt.setInteger("stackSize", getStackSize());
     }
 }

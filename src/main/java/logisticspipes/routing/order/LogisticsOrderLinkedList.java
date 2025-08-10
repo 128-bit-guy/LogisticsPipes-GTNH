@@ -47,6 +47,19 @@ public class LogisticsOrderLinkedList<E extends LogisticsOrder, I> implements It
         }
     }
 
+    public void addLastInOrder(E order) {
+        list.addLast(order);
+        I ident = identifyer.getIdentity(order);
+        if (identifyer.isExtra(order)) {
+            int prev = 0;
+            if (extraSize.containsKey(ident)) {
+                prev = extraSize.get(ident);
+            }
+            extraSize.put(ident, prev + 1);
+            globalExtraCount++;
+        }
+    }
+
     public void removeAll(List<E> orders) {
         list.removeAll(orders);
         for (E order : orders) {

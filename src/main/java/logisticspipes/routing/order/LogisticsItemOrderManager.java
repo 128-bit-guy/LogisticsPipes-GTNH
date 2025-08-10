@@ -4,6 +4,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants;
+
 import logisticspipes.interfaces.IChangeListener;
 import logisticspipes.interfaces.ILPPositionProvider;
 import logisticspipes.interfaces.routing.IAdditionalTargetInformation;
@@ -37,6 +41,11 @@ public class LogisticsItemOrderManager extends LogisticsOrderManager<LogisticsIt
         public LogisticsItemOrderExtra(DictResource item, IRequestItems destination, ResourceType type,
                 IAdditionalTargetInformation info) {
             super(item, destination, type, info);
+        }
+
+        public LogisticsItemOrderExtra(DictResource item, int destinationId, ResourceType type,
+                IAdditionalTargetInformation info) {
+            super(item, destinationId, type, info);
         }
     }
 
@@ -111,5 +120,38 @@ public class LogisticsItemOrderManager extends LogisticsOrderManager<LogisticsIt
             itemCount += request.getResource().stack.getStackSize();
         }
         return itemCount;
+    }
+
+    public void writeToNBT(NBTTagCompound nbttagcompound) {
+        NBTTagList nbttaglist = new NBTTagList();
+        for (LogisticsItemOrder order : _orders) {
+            NBTTagCompound orderTag = new NBTTagCompound();
+            orderTag.setBoolean("isExtra", order instanceof LogisticsItemOrderExtra);
+            NBTTagCompound resourceTag = new NBTTagCompound();
+            order.getResource().writeToNBT(resourceTag);
+            orderTag.setTag("resource", resourceTag);
+            orderTag.setInteger("destinationId", order.getRouterId());
+            orderTag.setByte("resourceType", (byte) order.getType().ordinal());
+            nbttaglist.appendTag(orderTag);
+
+        }
+        nbttagcompound.setTag("orders", nbttaglist);
+    }
+
+    public void readFromNBT(NBTTagCompound nbttagcompound) {
+        while (!_orders.isEmpty()) {
+            _orders.removeFirst();
+        }
+        NBTTagList nbttaglist = nbttagcompound.getTagList("orders", Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < nbttaglist.tagCount(); ++i) {
+            NBTTagCompound orderTag = nbttaglist.getCompoundTagAt(i);
+            boolean isExtra = orderTag.getBoolean("isExtra");
+            DictResource resource = new DictResource(orderTag.getCompoundTag("resource"));
+            int destinationId = orderTag.getInteger("destinationId");
+            ResourceType type = ResourceType.values()[orderTag.getByte("resourceType")];
+            LogisticsItemOrder order = isExtra ? new LogisticsItemOrderExtra(resource, destinationId, type, null)
+                    : new LogisticsItemOrder(resource, destinationId, type, null);
+            _orders.addLastInOrder(order);
+        }
     }
 }

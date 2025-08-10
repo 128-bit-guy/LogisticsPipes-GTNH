@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.BitSet;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 
 import com.google.common.base.Objects;
 
@@ -17,9 +18,8 @@ import logisticspipes.utils.string.ChatColor;
 
 public class DictResource implements IResource {
 
-    public ItemIdentifierStack stack;
     private final IRequestItems requester;
-
+    public ItemIdentifierStack stack;
     // match all items with same oredict name
     public boolean use_od = false;
     // match all items with same id
@@ -28,6 +28,7 @@ public class DictResource implements IResource {
     public boolean ignore_nbt = false;
     // match all items with same oredict prefix
     public boolean use_category = false;
+    private Object ccObject;
 
     public DictResource(ItemIdentifierStack stack, IRequestItems requester) {
         this.stack = stack;
@@ -44,6 +45,15 @@ public class DictResource implements IResource {
         use_category = bits.get(3);
     }
 
+    public DictResource(NBTTagCompound nbttagcompound) {
+        stack = ItemIdentifierStack.getFromNbt(nbttagcompound.getCompoundTag("stack"));
+        use_od = nbttagcompound.getBoolean("use_od");
+        ignore_dmg = nbttagcompound.getBoolean("ignore_dmg");
+        ignore_nbt = nbttagcompound.getBoolean("ignore_nbt");
+        use_category = nbttagcompound.getBoolean("use_category");
+        requester = null;
+    }
+
     @Override
     public void writeData(LPDataOutputStream data) throws IOException {
         data.writeItemIdentifierStack(stack);
@@ -53,6 +63,16 @@ public class DictResource implements IResource {
         bits.set(2, ignore_nbt);
         bits.set(3, use_category);
         data.writeBitSet(bits);
+    }
+
+    public void writeToNBT(NBTTagCompound nbttagcompound) {
+        NBTTagCompound stacknbt = new NBTTagCompound();
+        stack.writeToNBT(stacknbt);
+        nbttagcompound.setTag("stack", stacknbt);
+        nbttagcompound.setBoolean("use_od", use_od);
+        nbttagcompound.setBoolean("ignore_dmg", ignore_dmg);
+        nbttagcompound.setBoolean("ignore_nbt", ignore_nbt);
+        nbttagcompound.setBoolean("use_category", use_category);
     }
 
     @Override
@@ -162,16 +182,14 @@ public class DictResource implements IResource {
         return clone;
     }
 
-    private Object ccObject;
+    @Override
+    public Object getCCType() {
+        return ccObject;
+    }
 
     @Override
     public void setCCType(Object type) {
         ccObject = type;
-    }
-
-    @Override
-    public Object getCCType() {
-        return ccObject;
     }
 
     @Override

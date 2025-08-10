@@ -798,6 +798,11 @@ public abstract class CoreRoutedPipe extends CoreUnroutedPipe
                 nbttagcompound.setBoolean("PipeSign_" + i, false);
             }
         }
+        if (_orderItemManager != null) {
+            NBTTagCompound orderManager = new NBTTagCompound();
+            _orderItemManager.writeToNBT(orderManager);
+            nbttagcompound.setTag("orderManager", orderManager);
+        }
     }
 
     @Override
@@ -839,6 +844,9 @@ public abstract class CoreRoutedPipe extends CoreUnroutedPipe
                     throw new RuntimeException(e);
                 }
             }
+        }
+        if (nbttagcompound.hasKey("orderManager")) {
+            getItemOrderManager().readFromNBT(nbttagcompound.getCompoundTag("orderManager"));
         }
     }
 

@@ -211,7 +211,7 @@ public class ModuleProvider extends LogisticsSneakyDirectionModule implements IL
             int sent = sendStack(
                     order.getResource().stack,
                     itemsleft,
-                    order.getDestination().getRouter().getSimpleID(),
+                    order.getDestinationId(),
                     order.getInformation());
             if (sent < 0) {
                 break;
