@@ -48,6 +48,7 @@ import logisticspipes.pipes.basic.debug.StatusEntry;
 import logisticspipes.proxy.MainProxy;
 import logisticspipes.proxy.SimpleServiceLocator;
 import logisticspipes.request.RequestTree;
+import logisticspipes.routing.AdditionalTargetInformationType;
 import logisticspipes.routing.IRouter;
 import logisticspipes.utils.AdjacentTile;
 import logisticspipes.utils.ISimpleInventoryEventHandler;
@@ -297,8 +298,10 @@ public class ModuleActiveSupplier extends LogisticsGuiModule
             boolean success = false;
 
             IAdditionalTargetInformation targetInformation = new PatternSupplierTargetInformation(
+                    getPositionInt(),
                     slotArray[i],
-                    needed.getStackSize());
+                    needed.getStackSize(),
+                    isLimited());
 
             if (_patternMode != PatternMode.Full) {
                 _service.getDebug().log("Supplier: Requesting partial: %s", toRequest);
@@ -390,7 +393,7 @@ public class ModuleActiveSupplier extends LogisticsGuiModule
 
             boolean success = false;
 
-            IAdditionalTargetInformation targetInformation = new SupplierTargetInformation();
+            IAdditionalTargetInformation targetInformation = new SupplierTargetInformation(getPositionInt());
 
             if (_requestMode != SupplyMode.Full) {
                 _service.getDebug().log("Supplier: Requesting partial: " + need.getKey().makeStack(neededCount));
@@ -607,15 +610,25 @@ public class ModuleActiveSupplier extends LogisticsGuiModule
         return false;
     }
 
-    public class PatternSupplierTargetInformation extends SupplierTargetInformation implements ITargetSlotInformation {
+    public static class PatternSupplierTargetInformation extends SupplierTargetInformation
+            implements ITargetSlotInformation {
 
         private final int amount;
         private final int targetSlot;
+        private final boolean limited;
 
-        public PatternSupplierTargetInformation(int targetSlot, int amount) {
-            super();
+        public PatternSupplierTargetInformation(int moduleSlot, int targetSlot, int amount, boolean limited) {
+            super(moduleSlot);
             this.targetSlot = targetSlot;
             this.amount = amount;
+            this.limited = limited;
+        }
+
+        public PatternSupplierTargetInformation(NBTTagCompound compound) {
+            super(compound);
+            amount = compound.getInteger("amount");
+            targetSlot = compound.getInteger("targetSlot");
+            limited = compound.getBoolean("limited");
         }
 
         @Override
@@ -630,14 +643,36 @@ public class ModuleActiveSupplier extends LogisticsGuiModule
 
         @Override
         public boolean isLimited() {
-            return ModuleActiveSupplier.this.isLimited();
+            return limited;
+        }
+
+        @Override
+        public AdditionalTargetInformationType getType() {
+            return AdditionalTargetInformationType.PatternSupplier;
+        }
+
+        @Override
+        public void writeToNBT(NBTTagCompound tag) {
+            super.writeToNBT(tag);
+            tag.setInteger("amount", amount);
+            tag.setInteger("targetSlot", targetSlot);
+            tag.setBoolean("limited", limited);
         }
     }
 
-    public class SupplierTargetInformation extends ChassiTargetInformation {
+    public static class SupplierTargetInformation extends ChassiTargetInformation {
 
-        public SupplierTargetInformation() {
-            super(getPositionInt());
+        public SupplierTargetInformation(int slot) {
+            super(slot);
+        }
+
+        public SupplierTargetInformation(NBTTagCompound compound) {
+            super(compound);
+        }
+
+        @Override
+        public AdditionalTargetInformationType getType() {
+            return AdditionalTargetInformationType.Supplier;
         }
     }
 }

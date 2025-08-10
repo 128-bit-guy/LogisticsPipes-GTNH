@@ -70,6 +70,13 @@ public class ItemRoutingInformation {
         if (stack != null) {
             setItem(ItemIdentifierStack.getFromStack(stack));
         }
+
+        targetInfo = null;
+        if (nbttagcompound.hasKey("targetInfoType")) {
+            AdditionalTargetInformationType informationType = AdditionalTargetInformationType.values()[nbttagcompound
+                    .getByte("targetInfoType")];
+            targetInfo = informationType.load(nbttagcompound.getCompoundTag("targetInfo"));
+        }
     }
 
     public void writeToNBT(NBTTagCompound nbttagcompound) {
@@ -83,6 +90,13 @@ public class ItemRoutingInformation {
         NBTTagCompound nbttagcompound2 = new NBTTagCompound();
         getItem().makeNormalStack().writeToNBT(nbttagcompound2);
         nbttagcompound.setTag("Item", nbttagcompound2);
+
+        if (targetInfo != null) {
+            nbttagcompound.setByte("targetInfoType", (byte) targetInfo.getType().ordinal());
+            NBTTagCompound informationTag = new NBTTagCompound();
+            targetInfo.writeToNBT(informationTag);
+            nbttagcompound.setTag("targetInfo", informationTag);
+        }
     }
 
     // the global LP tick in which getTickToTimeOut returns 0.

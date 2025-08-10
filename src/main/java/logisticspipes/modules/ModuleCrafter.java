@@ -97,12 +97,7 @@ import logisticspipes.request.resources.DictResource;
 import logisticspipes.request.resources.FluidResource;
 import logisticspipes.request.resources.IResource;
 import logisticspipes.request.resources.ItemResource;
-import logisticspipes.routing.ExitRoute;
-import logisticspipes.routing.IRouter;
-import logisticspipes.routing.LogisticsDictPromise;
-import logisticspipes.routing.LogisticsExtraDictPromise;
-import logisticspipes.routing.LogisticsExtraPromise;
-import logisticspipes.routing.LogisticsPromise;
+import logisticspipes.routing.*;
 import logisticspipes.routing.order.IOrderInfoProvider.ResourceType;
 import logisticspipes.routing.order.LogisticsItemOrder;
 import logisticspipes.utils.AdjacentTile;
@@ -1703,6 +1698,22 @@ public class ModuleCrafter extends LogisticsGuiModule implements ICraftItems, IH
         public CraftingChassieInformation(int craftingSlot, int moduleSlot) {
             super(moduleSlot);
             this.craftingSlot = craftingSlot;
+        }
+
+        public CraftingChassieInformation(NBTTagCompound compound) {
+            super(compound);
+            this.craftingSlot = compound.getInteger("craftingSlot");
+        }
+
+        @Override
+        public AdditionalTargetInformationType getType() {
+            return AdditionalTargetInformationType.Crafting;
+        }
+
+        @Override
+        public void writeToNBT(NBTTagCompound tag) {
+            super.writeToNBT(tag);
+            tag.setInteger("craftingSlot", craftingSlot);
         }
     }
 }

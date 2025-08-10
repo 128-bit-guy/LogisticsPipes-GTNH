@@ -13,6 +13,7 @@ import logisticspipes.interfaces.ILPPositionProvider;
 import logisticspipes.interfaces.routing.IAdditionalTargetInformation;
 import logisticspipes.interfaces.routing.IRequestItems;
 import logisticspipes.request.resources.DictResource;
+import logisticspipes.routing.AdditionalTargetInformationType;
 import logisticspipes.routing.order.IOrderInfoProvider.ResourceType;
 import logisticspipes.utils.item.ItemIdentifier;
 import logisticspipes.utils.item.ItemIdentifierStack;
@@ -132,6 +133,13 @@ public class LogisticsItemOrderManager extends LogisticsOrderManager<LogisticsIt
             orderTag.setTag("resource", resourceTag);
             orderTag.setInteger("destinationId", order.getRouterId());
             orderTag.setByte("resourceType", (byte) order.getType().ordinal());
+            IAdditionalTargetInformation information = order.getInformation();
+            if (information != null) {
+                orderTag.setByte("informationType", (byte) information.getType().ordinal());
+                NBTTagCompound informationTag = new NBTTagCompound();
+                information.writeToNBT(informationTag);
+                orderTag.setTag("information", informationTag);
+            }
             nbttaglist.appendTag(orderTag);
 
         }
@@ -149,8 +157,14 @@ public class LogisticsItemOrderManager extends LogisticsOrderManager<LogisticsIt
             DictResource resource = new DictResource(orderTag.getCompoundTag("resource"));
             int destinationId = orderTag.getInteger("destinationId");
             ResourceType type = ResourceType.values()[orderTag.getByte("resourceType")];
-            LogisticsItemOrder order = isExtra ? new LogisticsItemOrderExtra(resource, destinationId, type, null)
-                    : new LogisticsItemOrder(resource, destinationId, type, null);
+            IAdditionalTargetInformation information = null;
+            if (orderTag.hasKey("informationType")) {
+                AdditionalTargetInformationType informationType = AdditionalTargetInformationType.values()[orderTag
+                        .getByte("informationType")];
+                information = informationType.load(orderTag.getCompoundTag("information"));
+            }
+            LogisticsItemOrder order = isExtra ? new LogisticsItemOrderExtra(resource, destinationId, type, information)
+                    : new LogisticsItemOrder(resource, destinationId, type, information);
             _orders.addLastInOrder(order);
         }
     }

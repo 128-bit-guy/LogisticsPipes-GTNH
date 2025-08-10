@@ -69,6 +69,7 @@ import logisticspipes.request.RequestTree;
 import logisticspipes.request.RequestTreeNode;
 import logisticspipes.request.resources.DictResource;
 import logisticspipes.request.resources.IResource;
+import logisticspipes.routing.AdditionalTargetInformationType;
 import logisticspipes.routing.LogisticsPromise;
 import logisticspipes.routing.order.IOrderInfoProvider.ResourceType;
 import logisticspipes.routing.order.LogisticsItemOrder;
@@ -793,6 +794,20 @@ public abstract class PipeLogisticsChassi extends CoreRoutedPipe
 
         public ChassiTargetInformation(int slot) {
             moduleSlot = slot;
+        }
+
+        public ChassiTargetInformation(NBTTagCompound compound) {
+            this(compound.getInteger("moduleSlot"));
+        }
+
+        @Override
+        public AdditionalTargetInformationType getType() {
+            return AdditionalTargetInformationType.Chassi;
+        }
+
+        @Override
+        public void writeToNBT(NBTTagCompound tag) {
+            tag.setInteger("moduleSlot", moduleSlot);
         }
     }
 }
