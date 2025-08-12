@@ -18,7 +18,9 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import logisticspipes.LogisticsPipes;
@@ -307,6 +309,15 @@ public class PipeItemsInvSysConnector extends CoreRoutedPipe
         super.writeToNBT(nbttagcompound);
         inv.writeToNBT(nbttagcompound, "");
         nbttagcompound.setInteger("resistance", resistance);
+        NBTTagList itemsOnRouteTag = new NBTTagList();
+        for (List<ItemRoutingInformation> entry : itemsOnRoute.values()) {
+            for (ItemRoutingInformation item : entry) {
+                NBTTagCompound itemTag = new NBTTagCompound();
+                item.writeToNBT(itemTag);
+                itemsOnRouteTag.appendTag(itemTag);
+            }
+        }
+        nbttagcompound.setTag("itemsOnRoute", itemsOnRouteTag);
     }
 
     @Override
@@ -314,6 +325,16 @@ public class PipeItemsInvSysConnector extends CoreRoutedPipe
         super.readFromNBT(nbttagcompound);
         inv.readFromNBT(nbttagcompound, "");
         resistance = nbttagcompound.getInteger("resistance");
+        itemsOnRoute.clear();
+        NBTTagList itemsOnRouteTag = nbttagcompound.getTagList("itemsOnRoute", Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < itemsOnRouteTag.tagCount(); i++) {
+            NBTTagCompound itemTag = itemsOnRouteTag.getCompoundTagAt(i);
+            ItemRoutingInformation item = new ItemRoutingInformation();
+            item.readFromNBT(itemTag);
+            ItemIdentifier id = item.getItem().getItem();
+            List<ItemRoutingInformation> entry = itemsOnRoute.computeIfAbsent(id, k -> new LinkedList<>());
+            entry.add(item);
+        }
     }
 
     private boolean hasRemoteConnection() {
@@ -370,6 +391,7 @@ public class PipeItemsInvSysConnector extends CoreRoutedPipe
             // random removal
             entry.add(info);
             updateContentListener();
+            container.markDirty();
         }
     }
 
